@@ -63,7 +63,7 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _ensure_rc_cache(ctx):
     """Ensures that a singleton resource class cache has been created in the
     module's scope.
@@ -78,7 +78,7 @@ def _ensure_rc_cache(ctx):
 
 
 @oslo_db_api.wrap_db_retry(max_retries=5, retry_on_deadlock=True)
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _trait_sync(ctx):
     """Sync the os_traits symbols to the database.
 
@@ -284,7 +284,7 @@ def _increment_provider_generation(ctx, rp):
     return new_generation
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _add_inventory(context, rp, inventory):
     """Add one Inventory that wasn't already on the provider.
 
@@ -299,7 +299,7 @@ def _add_inventory(context, rp, inventory):
     rp.generation = _increment_provider_generation(context, rp)
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _update_inventory(context, rp, inventory):
     """Update an inventory already on the provider.
 
@@ -315,7 +315,7 @@ def _update_inventory(context, rp, inventory):
     return exceeded
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _delete_inventory(context, rp, resource_class):
     """Delete up to one Inventory of the given resource_class string.
 
@@ -331,7 +331,7 @@ def _delete_inventory(context, rp, resource_class):
     rp.generation = _increment_provider_generation(context, rp)
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _set_inventory(context, rp, inv_list):
     """Given an InventoryList object, replaces the inventory of the
     resource provider in a safe, atomic fashion using the resource
@@ -387,7 +387,7 @@ def _set_inventory(context, rp, inv_list):
     return exceeded
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_provider_by_uuid(context, uuid):
     """Given a UUID, return a dict of information about the resource provider
     from the database.
@@ -421,7 +421,7 @@ def _get_provider_by_uuid(context, uuid):
     return dict(res)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_aggregates_by_provider_id(context, rp_id):
     join_statement = sa.join(
         _AGG_TBL, _RP_AGG_TBL, sa.and_(
@@ -431,7 +431,7 @@ def _get_aggregates_by_provider_id(context, rp_id):
     return [r[0] for r in context.session.execute(sel).fetchall()]
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _set_aggregates(context, resource_provider, provided_aggregates,
                     increment_generation=False):
     rp_id = resource_provider.id
@@ -496,7 +496,7 @@ def _set_aggregates(context, resource_provider, provided_aggregates,
             context, resource_provider)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_traits_by_provider_id(context, rp_id):
     t = sa.alias(_TRAIT_TBL, name='t')
     rpt = sa.alias(_RP_TRAIT_TBL, name='rpt')
@@ -548,7 +548,7 @@ def _delete_traits_from_provider(ctx, rp_id, to_delete):
     ctx.session.execute(del_stmt)
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _set_traits(context, rp, traits):
     """Given a ResourceProvider object and a TraitList object, replaces the set
     of traits associated with the resource provider.
@@ -578,7 +578,7 @@ def _set_traits(context, rp, traits):
     rp.generation = _increment_provider_generation(context, rp)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _has_child_providers(context, rp_id):
     """Returns True if the supplied resource provider has any child providers,
     False otherwise
@@ -591,7 +591,7 @@ def _has_child_providers(context, rp_id):
     return False
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _set_root_provider_id(context, rp_id, root_id):
     """Simply sets the root_provider_id value for a provider identified by
     rp_id. Used in online data migration.
@@ -651,7 +651,7 @@ def _provider_ids_from_uuid(context, uuid):
     return ProviderIds(**dict(res))
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _delete_rp_record(context, _id):
     return context.session.query(models.ResourceProvider).\
         filter(models.ResourceProvider.id == _id).\
@@ -785,7 +785,7 @@ class ResourceProvider(base.VersionedObject, base.TimestampedObject):
         _set_traits(self._context, self, traits)
         self.obj_reset_changes()
 
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _create_in_db(self, context, updates):
         parent_id = None
         root_id = None
@@ -830,7 +830,7 @@ class ResourceProvider(base.VersionedObject, base.TimestampedObject):
             self.root_provider_uuid = self.uuid
 
     @staticmethod
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _delete(context, _id):
         # Do a quick check to see if the provider is a parent. If it is, don't
         # allow deleting the provider. Note that the foreign key constraint on
@@ -875,7 +875,7 @@ class ResourceProvider(base.VersionedObject, base.TimestampedObject):
         if not result:
             raise exception.NotFound()
 
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _update_in_db(self, context, id, updates):
         if 'parent_provider_uuid' in updates:
             # TODO(jaypipes): For now, "re-parenting" and "un-parenting" are
@@ -928,7 +928,7 @@ class ResourceProvider(base.VersionedObject, base.TimestampedObject):
                     reason=_('parent provider UUID does not exist.'))
 
     @staticmethod
-    @db_api.api_context_manager.writer  # Needed for online data migration
+    @db_api.placement_context_manager.writer  # For online data migration
     def _from_db_object(context, resource_provider, db_resource_provider):
         # Online data migration to populate root_provider_id
         # TODO(jaypipes): Remove when all root_provider_id values are NOT NULL
@@ -944,7 +944,7 @@ class ResourceProvider(base.VersionedObject, base.TimestampedObject):
         return resource_provider
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_providers_with_shared_capacity(ctx, rc_id, amount):
     """Returns a list of resource provider IDs (internal IDs, not UUIDs)
     that have capacity for a requested amount of a resource and indicate that
@@ -1063,7 +1063,7 @@ def _get_providers_with_shared_capacity(ctx, rc_id, amount):
     return [r[0] for r in ctx.session.execute(sel)]
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_all_with_shared(ctx, resources, member_of=None):
     """Uses some more advanced SQL to find providers that either have the
     requested resources "locally" or are associated with a provider that shares
@@ -1414,7 +1414,7 @@ class ResourceProviderList(base.ObjectListBase, base.VersionedObject):
     }
 
     @staticmethod
-    @db_api.api_context_manager.reader
+    @db_api.placement_context_manager.reader
     def _get_all_by_filters_from_db(context, filters):
         # Eg. filters can be:
         #  filters = {
@@ -1647,7 +1647,7 @@ class Inventory(base.VersionedObject, base.TimestampedObject):
         return int((self.total - self.reserved) * self.allocation_ratio)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_inventory_by_provider_id(ctx, rp_id):
     inv = sa.alias(_INV_TBL, name="i")
     cols = [
@@ -1767,7 +1767,7 @@ class Allocation(base.VersionedObject, base.TimestampedObject):
                 pass
 
 
-@db_api.api_context_manager.writer
+@db_api.placement_context_manager.writer
 def _delete_allocations_for_consumer(ctx, consumer_id):
     """Deletes any existing allocations that correspond to the allocations to
     be written. This is wrapped in a transaction, so if the write subsequently
@@ -1986,7 +1986,7 @@ def _ensure_user(ctx, external_id):
     return _ensure_lookup_table_entry(ctx, _USER_TBL, external_id)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_allocations_by_provider_id(ctx, rp_id):
     allocs = sa.alias(_ALLOC_TBL, name="a")
     cols = [
@@ -2002,7 +2002,7 @@ def _get_allocations_by_provider_id(ctx, rp_id):
     return [dict(r) for r in ctx.session.execute(sel)]
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_allocations_by_consumer_uuid(ctx, consumer_uuid):
     allocs = sa.alias(_ALLOC_TBL, name="a")
     rp = sa.alias(_RP_TBL, name="rp")
@@ -2043,7 +2043,7 @@ class AllocationList(base.ObjectListBase, base.VersionedObject):
     }
 
     @oslo_db_api.wrap_db_retry(max_retries=5, retry_on_deadlock=True)
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _set_allocations(self, context, allocs):
         """Write a set of allocations.
 
@@ -2231,7 +2231,7 @@ class UsageList(base.ObjectListBase, base.VersionedObject):
     }
 
     @staticmethod
-    @db_api.api_context_manager.reader
+    @db_api.placement_context_manager.reader
     def _get_all_by_resource_provider_uuid(context, rp_uuid):
         query = (context.session.query(models.Inventory.resource_class_id,
                  func.coalesce(func.sum(models.Allocation.used), 0))
@@ -2250,7 +2250,7 @@ class UsageList(base.ObjectListBase, base.VersionedObject):
         return result
 
     @staticmethod
-    @db_api.api_context_manager.reader
+    @db_api.placement_context_manager.reader
     def _get_all_by_project_user(context, project_id, user_id=None):
         query = (context.session.query(models.Allocation.resource_class_id,
                  func.coalesce(func.sum(models.Allocation.used), 0))
@@ -2328,7 +2328,7 @@ class ResourceClass(base.VersionedObject, base.TimestampedObject):
         return obj
 
     @staticmethod
-    @db_api.api_context_manager.reader
+    @db_api.placement_context_manager.reader
     def _get_next_id(context):
         """Utility method to grab the next resource class identifier to use for
          user-defined resource classes.
@@ -2387,7 +2387,7 @@ class ResourceClass(base.VersionedObject, base.TimestampedObject):
             raise exception.MaxDBRetriesExceeded(action=msg)
 
     @staticmethod
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _create_in_db(context, updates):
         next_id = ResourceClass._get_next_id(context)
         rc = models.ResourceClass()
@@ -2411,7 +2411,7 @@ class ResourceClass(base.VersionedObject, base.TimestampedObject):
         _RC_CACHE.clear()
 
     @staticmethod
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _destroy(context, _id, name):
         # Don't delete the resource class if it is referred to in the
         # inventories table.
@@ -2440,7 +2440,7 @@ class ResourceClass(base.VersionedObject, base.TimestampedObject):
         _RC_CACHE.clear()
 
     @staticmethod
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _save(context, id, name, updates):
         db_rc = context.session.query(models.ResourceClass).filter_by(
             id=id).first()
@@ -2459,7 +2459,7 @@ class ResourceClassList(base.ObjectListBase, base.VersionedObject):
     }
 
     @staticmethod
-    @db_api.api_context_manager.reader
+    @db_api.placement_context_manager.reader
     def _get_all(context):
         _ensure_rc_cache(context)
         customs = list(context.session.query(models.ResourceClass).all())
@@ -2496,7 +2496,7 @@ class Trait(base.VersionedObject, base.TimestampedObject):
         return trait
 
     @staticmethod
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _create_in_db(context, updates):
         trait = models.Trait()
         trait.update(updates)
@@ -2521,7 +2521,7 @@ class Trait(base.VersionedObject, base.TimestampedObject):
         self._from_db_object(self._context, self, db_trait)
 
     @staticmethod
-    @db_api.api_context_manager.writer  # trait sync can cause a write
+    @db_api.placement_context_manager.writer  # trait sync can cause a write
     def _get_by_name_from_db(context, name):
         _ensure_trait_sync(context)
         result = context.session.query(models.Trait).filter_by(
@@ -2536,7 +2536,7 @@ class Trait(base.VersionedObject, base.TimestampedObject):
         return cls._from_db_object(context, cls(), db_trait)
 
     @staticmethod
-    @db_api.api_context_manager.writer
+    @db_api.placement_context_manager.writer
     def _destroy_in_db(context, _id, name):
         num = context.session.query(models.ResourceProviderTrait).filter(
             models.ResourceProviderTrait.trait_id == _id).count()
@@ -2571,7 +2571,7 @@ class TraitList(base.ObjectListBase, base.VersionedObject):
     }
 
     @staticmethod
-    @db_api.api_context_manager.writer  # trait sync can cause a write
+    @db_api.placement_context_manager.writer  # trait sync can cause a write
     def _get_all_from_db(context, filters):
         _ensure_trait_sync(context)
         if not filters:
@@ -2658,7 +2658,7 @@ class ProviderSummary(base.VersionedObject):
         return set(res.resource_class for res in self.resources)
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_usages_by_provider_and_rc(ctx, rp_ids, rc_ids):
     """Returns a row iterator of usage records grouped by resource provider ID
     and resource class ID for all resource providers and resource classes
@@ -2733,7 +2733,7 @@ def _get_usages_by_provider_and_rc(ctx, rp_ids, rc_ids):
     return ctx.session.execute(query).fetchall()
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_provider_ids_having_any_trait(ctx, traits):
     """Returns a list of resource provider internal IDs that have ANY of the
     supplied traits.
@@ -2754,7 +2754,7 @@ def _get_provider_ids_having_any_trait(ctx, traits):
     return [r[0] for r in ctx.session.execute(sel)]
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_provider_ids_having_all_traits(ctx, required_traits):
     """Returns a list of resource provider internal IDs that have ALL of the
     required traits.
@@ -2783,7 +2783,7 @@ def _get_provider_ids_having_all_traits(ctx, required_traits):
     return [r[0] for r in ctx.session.execute(sel)]
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _has_provider_trees(ctx):
     """Simple method that returns whether provider trees (i.e. nested resource
     providers) are in use in the deployment at all. This information is used to
@@ -2800,7 +2800,7 @@ def _has_provider_trees(ctx):
     return len(res) > 0
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_provider_ids_matching_all(ctx, resources, required_traits,
         member_of=None):
     """Returns a list of resource provider internal IDs that have available
@@ -2922,7 +2922,7 @@ def _get_provider_ids_matching_all(ctx, resources, required_traits,
     return [r[0] for r in ctx.session.execute(sel)]
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _provider_aggregates(ctx, rp_ids):
     """Given a list of resource provider internal IDs, returns a dict,
     keyed by those provider IDs, of sets of aggregate ids associated
@@ -2947,7 +2947,7 @@ def _provider_aggregates(ctx, rp_ids):
     return res
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _get_trees_matching_all_resources(ctx, resources):
     """Returns a list of root provider internal IDs for provider trees where
     the nodes in the tree collectively have available inventory to satisfy all
@@ -3454,7 +3454,7 @@ def _alloc_candidates_with_shared(ctx, requested_resources, required_traits,
     return alloc_requests, list(summaries.values())
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _provider_traits(ctx, rp_ids):
     """Given a list of resource provider internal IDs, returns a dict, keyed by
     those provider IDs, of string trait names associated with that provider.
@@ -3479,7 +3479,7 @@ def _provider_traits(ctx, rp_ids):
     return res
 
 
-@db_api.api_context_manager.reader
+@db_api.placement_context_manager.reader
 def _trait_ids_from_names(ctx, names):
     """Given a list of string trait names, returns a dict, keyed by those
     string names, of the corresponding internal integer trait ID.
@@ -3549,7 +3549,7 @@ class AllocationCandidates(base.VersionedObject):
         )
 
     @staticmethod
-    @db_api.api_context_manager.reader
+    @db_api.placement_context_manager.reader
     def _get_by_requests(context, requests, limit=None):
         # We first get the list of "root providers" that either have the
         # requested resources or are associated with the providers that
