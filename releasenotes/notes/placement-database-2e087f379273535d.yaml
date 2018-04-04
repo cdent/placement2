@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    An optional configuration group placement_database can be used in
+    nova.conf to configure a separate database for use with the placement
+    API.
+
+    If placement_database.connection has a value this will be used as the
+    connection URL for the placement database. That database will be
+    a replica of the tables used in the API datbase. It will be created and
+    synchronized when the 'nova-manage api_db sync' command is run.
+
+    When the setting is None the existing settings for the api_database
+    will be used for hosting placement API data.
