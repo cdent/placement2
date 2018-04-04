@@ -16,9 +16,9 @@ from oslo_db import exception as db_exc
 import sqlalchemy as sa
 
 import nova
-from nova.api.openstack.placement import deploy
-from nova.api.openstack.placement import exception
-from nova.api.openstack.placement.objects import resource_provider as rp_obj
+from placement import deploy
+from placement import exception
+from placement.objects import resource_provider as rp_obj
 from nova import context
 from nova import rc_fields as fields
 from nova import test

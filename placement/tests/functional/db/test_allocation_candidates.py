@@ -13,10 +13,10 @@ import os_traits
 from oslo_utils import uuidutils
 import sqlalchemy as sa
 
-from nova.api.openstack.placement import deploy
-from nova.api.openstack.placement import exception
-from nova.api.openstack.placement import lib as placement_lib
-from nova.api.openstack.placement.objects import resource_provider as rp_obj
+from placement import deploy
+from placement import exception
+from placement import lib as placement_lib
+from placement.objects import resource_provider as rp_obj
 from nova import context
 from nova import rc_fields as fields
 from nova import test

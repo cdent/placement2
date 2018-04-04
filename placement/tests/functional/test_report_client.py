@@ -17,7 +17,7 @@ import mock
 import requests
 from wsgi_intercept import interceptor
 
-from nova.api.openstack.placement import deploy
+from placement import deploy
 from nova import conf
 from nova import context
 # TODO(cdent): This points to the nova, not placement, exception for

@@ -16,12 +16,11 @@ import six
 from oslo_utils import timeutils
 
 import nova
-from nova.api.openstack.placement import exception
-from nova.api.openstack.placement.objects import resource_provider
+from placement import exception
+from placement.objects import resource_provider
 from nova import context
 from nova.db.sqlalchemy import api_models as models
 from nova import rc_fields as fields
-from nova import test
 from nova.tests.unit.objects import test_objects
 from nova.tests import uuidsentinel as uuids
 
@@ -436,7 +435,7 @@ class TestAllocationListNoDB(test_objects._LocalTest):
         self.assertEqual(_ALLOCATION_DB['used'], allocations[0].used)
 
 
-class TestResourceClass(test.NoDBTestCase):
+class TestResourceClass(testtools.TestCase):
 
     def setUp(self):
         super(TestResourceClass, self).setUp()
@@ -456,7 +455,7 @@ class TestResourceClass(test.NoDBTestCase):
         self.assertIn('name is required', str(exc))
 
 
-class TestTraits(test.NoDBTestCase):
+class TestTraits(testtools.TestCase):
 
     def setUp(self):
         super(TestTraits, self).setUp()

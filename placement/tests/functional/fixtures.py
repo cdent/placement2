@@ -16,8 +16,8 @@ from gabbi import fixture
 from oslo_middleware import cors
 from oslo_utils import uuidutils
 
-from nova.api.openstack.placement import deploy
-from nova.api.openstack.placement.objects import resource_provider as rp_obj
+from placement import deploy
+from placement.objects import resource_provider as rp_obj
 from nova import conf
 from nova import config
 from nova import context

@@ -18,18 +18,18 @@ import webob
 
 import microversion_parse
 import mock
+import testtools
 
 # import the handlers to load up handler decorators
-import nova.api.openstack.placement.handler  # noqa
-from nova.api.openstack.placement import microversion
-from nova import test
+import placement.handler  # noqa
+from placement import microversion
 
 
 def handler():
     return True
 
 
-class TestMicroversionFindMethod(test.NoDBTestCase):
+class TestMicroversionFindMethod(testtools.TestCase):
     def test_method_405(self):
         self.assertRaises(webob.exc.HTTPMethodNotAllowed,
                           microversion._find_method, handler, '1.1', 405)
@@ -39,9 +39,9 @@ class TestMicroversionFindMethod(test.NoDBTestCase):
                           microversion._find_method, handler, '1.1', 404)
 
 
-class TestMicroversionDecoration(test.NoDBTestCase):
+class TestMicroversionDecoration(testtools.TestCase):
 
-    @mock.patch('nova.api.openstack.placement.microversion.VERSIONED_METHODS',
+    @mock.patch('placement.microversion.VERSIONED_METHODS',
                 new=collections.defaultdict(list))
     def test_methods_structure(self):
         """Test that VERSIONED_METHODS gets data as expected."""
@@ -79,7 +79,7 @@ class TestMicroversionDecoration(test.NoDBTestCase):
                           handler)
 
 
-class TestMicroversionIntersection(test.NoDBTestCase):
+class TestMicroversionIntersection(testtools.TestCase):
     """Test that there are no overlaps in the versioned handlers."""
 
     # If you add versioned handlers you need to update this value to
@@ -112,7 +112,7 @@ class TestMicroversionIntersection(test.NoDBTestCase):
                 return True
         return False
 
-    @mock.patch('nova.api.openstack.placement.microversion.VERSIONED_METHODS',
+    @mock.patch('placement.microversion.VERSIONED_METHODS',
                 new=collections.defaultdict(list))
     def test_faked_intersection(self):
         microversion.version_handler('1.0', '1.9')(handler)
@@ -121,7 +121,7 @@ class TestMicroversionIntersection(test.NoDBTestCase):
         for method_info in microversion.VERSIONED_METHODS.values():
             self.assertTrue(self._check_intersection(method_info))
 
-    @mock.patch('nova.api.openstack.placement.microversion.VERSIONED_METHODS',
+    @mock.patch('placement.microversion.VERSIONED_METHODS',
                 new=collections.defaultdict(list))
     def test_faked_non_intersection(self):
         microversion.version_handler('1.0', '1.8')(handler)
@@ -138,7 +138,7 @@ class TestMicroversionIntersection(test.NoDBTestCase):
                 'method %s has intersecting versioned handlers' % method_name)
 
 
-class MicroversionSequentialTest(test.NoDBTestCase):
+class MicroversionSequentialTest(testtools.TestCase):
 
     def test_microversion_sequential(self):
         for method_name, method_list in microversion.VERSIONED_METHODS.items():

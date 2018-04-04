@@ -15,10 +15,10 @@
 import mock
 
 from oslo_serialization import jsonutils
+import testtools
 import webob
 
-from nova.api.openstack.placement import fault_wrap
-from nova import test
+from placement import fault_wrap
 
 
 ERROR_MESSAGE = 'that was not supposed to happen'
@@ -28,7 +28,7 @@ class Fault(Exception):
     pass
 
 
-class TestFaultWrapper(test.NoDBTestCase):
+class TestFaultWrapper(testtools.TestCase):
 
     @staticmethod
     @webob.dec.wsgify
@@ -58,7 +58,7 @@ class TestFaultWrapper(test.NoDBTestCase):
         call_args = self.start_response_mock.call_args
         self.assertEqual('500 Internal Server Error', call_args[0][0])
 
-    @mock.patch("nova.api.openstack.placement.fault_wrap.LOG")
+    @mock.patch("placement.fault_wrap.LOG")
     def test_fault_log(self, mocked_log):
         self.fail_app(self.environ, self.start_response_mock)
         mocked_log.exception.assert_called_once_with(

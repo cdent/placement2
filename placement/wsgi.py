@@ -23,8 +23,8 @@ from oslo_service import _options as service_opts
 from oslo_utils import importutils
 import pbr.version
 
-from nova.api.openstack.placement import db_api
-from nova.api.openstack.placement import deploy
+from placement import db_api
+from placement import deploy
 from nova.common import config
 from nova import conf
 

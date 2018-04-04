@@ -13,13 +13,13 @@
 """Tests for the placement request log middleware."""
 
 import mock
+import testtools
 import webob
 
-from nova.api.openstack.placement import requestlog
-from nova import test
+from placement import requestlog
 
 
-class TestRequestLog(test.NoDBTestCase):
+class TestRequestLog(testtools.TestCase):
 
     @staticmethod
     @webob.dec.wsgify
@@ -45,7 +45,7 @@ class TestRequestLog(test.NoDBTestCase):
         req_uri = requestlog.RequestLog._get_uri(self.environ)
         self.assertEqual('/placement/resource_providers?name=myrp', req_uri)
 
-    @mock.patch("nova.api.openstack.placement.requestlog.RequestLog.write_log")
+    @mock.patch("placement.requestlog.RequestLog.write_log")
     def test_middleware_writes_logs(self, write_log):
         start_response_mock = mock.MagicMock()
         app = requestlog.RequestLog(self.application)
@@ -53,7 +53,7 @@ class TestRequestLog(test.NoDBTestCase):
         write_log.assert_called_once_with(
             self.environ, '/resource_providers?name=myrp', '200 OK', '0')
 
-    @mock.patch("nova.api.openstack.placement.requestlog.LOG")
+    @mock.patch("placement.requestlog.LOG")
     def test_middleware_sends_message(self, mocked_log):
         start_response_mock = mock.MagicMock()
         app = requestlog.RequestLog(self.application)

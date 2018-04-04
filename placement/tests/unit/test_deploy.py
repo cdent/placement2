@@ -14,16 +14,16 @@
 """Unit tests for the deply function used to build the Placement service."""
 
 from oslo_config import cfg
+import testtools
 import webob
 
-from nova.api.openstack.placement import deploy
-from nova import test
+from placement import deploy
 
 
 CONF = cfg.CONF
 
 
-class DeployTest(test.NoDBTestCase):
+class DeployTest(testtools.TestCase):
 
     def test_auth_middleware_factory(self):
         """Make sure that configuration settings make their way to
