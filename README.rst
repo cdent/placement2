@@ -1,3 +1,10 @@
+
+==========
+DO NOT USE
+==========
+
+This is an experiment related to extracting placement from nova. See a related `blog posting <https://anticdent.org/placement-extraction.html>`_.
+
 ========================
 Team and repository tags
 ========================
